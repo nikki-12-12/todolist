@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #todo-form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #todo-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #todo-list {
+            list-style: none;
+            padding: 0;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .todo-text {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mi Lista de Tareas</h1>
+    <form id="todo-form">
+        <input type="text" id="todo-input" placeholder="Nueva tarea..." required>
+        <button type="submit">Agregar</button>
+    </form>
+    <ul id="todo-list"></ul>
+
+    <script>
+        // Obtener elementos del DOM
+        const form = document.getElementById('todo-form');
+        const input = document.getElementById('todo-input');
+        const todoList = document.getElementById('todo-list');
+
+        // Cargar tareas desde localStorage al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTodos = JSON.parse(localStorage.getItem('todos')) || [];
+            savedTodos.forEach(todo => addTodoToDOM(todo));
+        });
+
+        // Manejar envío del formulario
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const todoText = input.value.trim();
+            if (todoText) {
+                const newTodo = {
+                    id: Date.now(),
+                    text: todoText,
+                    completed: false
+                };
+                addTodoToDOM(newTodo);
+                saveTodoToStorage(newTodo);
+                input.value = '';
+            }
+        });
+
+        // Añadir tarea al DOM
+        function addTodoToDOM(todo) {
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            li.dataset.id = todo.id;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = todo.completed;
+            checkbox.addEventListener('change', toggleTodo);
+
+            const span = document.createElement('span');
+            span.className = 'todo-text';
+            span.textContent = todo.text;
+            if (todo.completed) {
+                span.classList.add('completed');
+            }
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = 'Eliminar';
+            deleteBtn.addEventListener('click', deleteTodo);
+
+            li.appendChild(checkbox);
+            li.appendChild(span);
+            li.appendChild(deleteBtn);
+            todoList.appendChild(li);
+        }
+
+        // Alternar estado completado
+        function toggleTodo(e) {
+            const li = e.target.parentElement;
+            const span = li.querySelector('.todo-text');
+            span.classList.toggle('completed');
+            
+            const todos = JSON.parse(localStorage.getItem('todos'));
+            const updatedTodos = todos.map(todo => {
+                if (todo.id === parseInt(li.dataset.id)) {
+                    return { ...todo, completed: !todo.completed };
+                }
+                return todo;
+            });
+            localStorage.setItem('todos', JSON.stringify(updatedTodos));
+        }
+
+        // Eliminar tarea
+        function deleteTodo(e) {
+            const li = e.target.parentElement;
+            li.remove();
+            
+            const todos = JSON.parse(localStorage.getItem('todos'));
+            const filteredTodos = todos.filter(todo => todo.id !== parseInt(li.dataset.id));
+            localStorage.setItem('todos', JSON.stringify(filteredTodos));
+        }
+
+        // Guardar en localStorage
+        function saveTodoToStorage(todo) {
+            const todos = JSON.parse(localStorage.getItem('todos')) || [];
+            todos.push(todo);
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+    </script>
+</body>
+</html>
